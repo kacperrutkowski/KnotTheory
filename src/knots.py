@@ -6,28 +6,39 @@ import string
 DATA_PATH = Path(__file__).resolve().parent.parent / "data"
 
 df_homfly = pd.read_csv(DATA_PATH / "homfly.csv")
+#print(df_homfly.columns)
+print(df_homfly['HOMFLY (vector)'][100])
 
-print(df_homfly['HOMFLY (vector)'])
 
-def string_to_vector(string_vector : str):
-    result = []
-    i = 0
-    while i < len(string_vector):
-        if string_vector[i] == "[":
-            result.append(string_vector[i + 1:])
+def vector_parser(str_digit:str):
+    def parse(i):
+        number = ""
+        result = []
+        while i < len(str_digit): #przechodzimy przez cały napis
+            char = str_digit[i]
+            if char == "[":
+                sublist, i = parse(i+1)
+                result.append(sublist)
+            elif char == "]":
+                if number:
+                    result.append(int(number))  # jeśli nie jest dodajemy do result
+                return result, i
+            elif char in string.digits:
+                if i > 0 and str_digit[i-1] == "-": #przypadek kiedy liczba ujemna
+                    number += "-" + char
+                else: #przypadek kiedy liczba dodatnia
+                    number += char
+            else: #napotkano inny znak
+                if number: #sprawdzamy, czy number nie jest pusty
+                    result.append(int(number)) #jeśli nie jest dodajemy do result
+                    number = "" #szukamy kolejnego numeru
             i += 1
-        if string_vector[i] in string.digits:
-            result.append(int(string_vector[i]))
-            i += 1
-        if string_vector[i] == "-":
-            result.append(string_vector[i:i+2])
-            i += 2
-        if string_vector[i] in [";"," "]:
-            i += 1
-        if string_vector[i] == "]":
-            return result
-        else:
-            print(f"{string_vector[i]} is an invalid symbol")
+        return result, i
+
+    parsed, _ = parse(0)
+    return parsed[0]
 
 
-vector = string_to_vector("[1; 2; 3; [3; -4]; 5]")
+print(vector_parser(df_homfly['HOMFLY (vector)'][100]))
+
+
