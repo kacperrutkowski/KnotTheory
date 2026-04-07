@@ -1,14 +1,3 @@
-import numpy as np
-import pandas as pd
-from pathlib import Path
-import string
-
-DATA_PATH = Path(__file__).resolve().parent.parent / "data"
-
-df_homfly = pd.read_csv(DATA_PATH / "homfly.csv")
-print(df_homfly['HOMFLY (vector)'][101])
-
-
 def string_to_vector_parser(str_digit : str, sep ="; "):
     def parse(i):
         number = ""
@@ -45,7 +34,26 @@ def string_to_vector_parser(str_digit : str, sep ="; "):
         raise ValueError("Unbalanced brackets")
     return parsed[0] #usuwamy pierwszy zewnętrzny nawias
 
-some_vector = "[12[3]]"
-print(string_to_vector_parser(df_homfly['HOMFLY (vector)'][101]))
+def reverse_vector(knot_vector : list, vector_type : str = "jones"):
+    """
+    Creates a mirror image of a knot.
 
+    :param knot_vector: A list representing knot's vector
+    :param vector_type: A type of vector corresponding to a polynomial. Three values are possible: jones, homfly, kauffman.
+    :return: A list representing reversed vector
+    """
+    if vector_type == "jones":
+        return [- knot_vector[1], -knot_vector[0]] + knot_vector[len(knot_vector)-1:1:-1]
+    elif vector_type == "homfly" or vector_type == "kauffman":
+        return knot_vector[0:2] + [reverse_vector(knot, vector_type= "jones") for knot in knot_vector[2:]]
+    else:
+        return None
 
+def is_symmetrical(knot_vector : list, vector_type : str = "jones"):
+    """
+    Checks if the mirror image of the knot is identical with the original knot.
+    :param knot_vector: A list representing knot's vector
+    :param vector_type: A type of vector corresponding to a polynomial. Three values are possible: jones, homfly, kauffman.
+    :return: Boolean value
+    """
+    return reverse_vector(knot_vector, vector_type) == knot_vector
