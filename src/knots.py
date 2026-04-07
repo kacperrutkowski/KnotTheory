@@ -6,14 +6,15 @@ import string
 DATA_PATH = Path(__file__).resolve().parent.parent / "data"
 
 df_homfly = pd.read_csv(DATA_PATH / "homfly.csv")
-#print(df_homfly.columns)
-print(df_homfly['HOMFLY (vector)'][100])
+print(df_homfly['HOMFLY (vector)'][101])
 
 
-def vector_parser(str_digit:str):
+def string_to_vector_parser(str_digit : str, sep ="; "):
     def parse(i):
         number = ""
         result = []
+        if not (str_digit[0] == "[" and str_digit[-1] == "]"):
+            raise ValueError("Invalid format. String does not have square brackets at the end or at the beginning")
         while i < len(str_digit): #przechodzimy przez cały napis
             char = str_digit[i]
             if char == "[":
@@ -21,24 +22,30 @@ def vector_parser(str_digit:str):
                 result.append(sublist)
             elif char == "]":
                 if number:
-                    result.append(int(number))  # jeśli nie jest dodajemy do result
+                    result.append(int(number))  # jeśli number nie jest pusty dodajemy do result
                 return result, i
-            elif char in string.digits:
-                if i > 0 and str_digit[i-1] == "-": #przypadek kiedy liczba ujemna
-                    number += "-" + char
-                else: #przypadek kiedy liczba dodatnia
+            elif char.isdigit():
                     number += char
-            else: #napotkano inny znak
+            elif str_digit[i: i + len(sep)] == sep:
                 if number: #sprawdzamy, czy number nie jest pusty
                     result.append(int(number)) #jeśli nie jest dodajemy do result
                     number = "" #szukamy kolejnego numeru
+                i += len(sep) - 1
+            elif char == "-":
+                if number:
+                    raise ValueError("Unexpected '-' in number")
+                number += "-"
+            else:
+                raise ValueError(f"Symbol {char} is not allowed in the input string")
             i += 1
         return result, i
 
-    parsed, _ = parse(0)
-    return parsed[0]
+    parsed, i = parse(0)
+    if i != len(str_digit):
+        raise ValueError("Unbalanced brackets")
+    return parsed[0] #usuwamy pierwszy zewnętrzny nawias
 
-
-print(vector_parser(df_homfly['HOMFLY (vector)'][100]))
+some_vector = "[12[3]]"
+print(string_to_vector_parser(df_homfly['HOMFLY (vector)'][101]))
 
 
