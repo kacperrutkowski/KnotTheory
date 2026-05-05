@@ -119,70 +119,102 @@ def check_if_bigons(pd_not : list[tuple[int]]) -> int:
 class Knot:
 
     def __init__(self, pd_notation):
-        self.__pd_notation = pd_notation
-        self.__crossings = [Crossing() for _ in range(len(pd_notation))]
+        self.pd_notation = pd_notation
+        self.crossings = [Crossing() for _ in range(len(pd_notation))] #creating list with empty crossings
+        for i in range(len(self.crossings)):
+            self.crossings[i].index = i
+            self.crossings[i].lower_stride.index = (2 * i)
+            self.crossings[i].upper_stride.index = (2 * i) + 1
         self.__assign_arcs()
 
     def __assign_arcs(self):
         assigned = set()
-        for i in range(len(self.__pd_notation)): # takes certain crossing
-            for i_n in range(len(self.__pd_notation[i])): # takes a number from this crossing
-                number1 = self.__pd_notation[i][i_n]
+        for i in range(len(self.pd_notation)): # takes certain crossing
+            for i_n in range(len(self.pd_notation[i])): # takes a number from this crossing
+                number1 = self.pd_notation[i][i_n]
                 if number1 not in assigned: # checks if the crossing is already assigned
-                    for j in range(i, len(self.__pd_notation)): # visits all the other crossing
-                        for j_n in range(len(self.__pd_notation[j])):
-                            number2 = self.__pd_notation[j][j_n]
+                    for j in range(i, len(self.pd_notation)): # visits all the other crossing
+                        for j_n in range(len(self.pd_notation[j])):
+                            number2 = self.pd_notation[j][j_n]
                             if number1 == number2: #checks if the crossing has common arc with the first crossing
                                 arc = Arc(number1)
-                                # first check what arc is it for the i-th crossing
+                                # first check which arc is it for the i-th crossing
                                 if i_n % 2 == 0: # the arc belongs to lower stride of the i-th crossing
-                                    if number1 == min(self.__pd_notation[i][0], self.__pd_notation[i][2]):
+                                    if number1 == min(self.pd_notation[i][0], self.pd_notation[i][2]):
                                         # the arc is the back arc of the stride
-                                        self.__crossings[i].lower_stride.back_arc = arc
+                                        self.crossings[i].lower_stride.back_arc = arc
+                                        self.crossings[i].lower_stride.back_arc.front_crossing = self.crossings[i]
                                     else: # the arc is the front arc of the stride
-                                        self.__crossings[i].lower_stride.front_arc = arc
+                                        self.crossings[i].lower_stride.front_arc = arc
+                                        self.crossings[i].lower_stride.front_arc.back_crossing = self.crossings[i]
                                 else: # the arc belongs to the upper stride of the i-th crossing
-                                    if number1 == min(self.__pd_notation[i][1], self.__pd_notation[i][3]):
+                                    if number1 == min(self.pd_notation[i][1], self.pd_notation[i][3]):
                                         # the arc is the back arc of the stride
-                                        self.__crossings[i].upper_stride.back_arc = arc
+                                        self.crossings[i].upper_stride.back_arc = arc
+                                        self.crossings[i].upper_stride.back_arc.front_crossing = self.crossings[i]
                                     else: # the arc is the front arc of the stride
-                                        self.__crossings[i].upper_stride.front_arc = arc
+                                        self.crossings[i].upper_stride.front_arc = arc
+                                        self.crossings[i].upper_stride.front_arc.back_crossing = self.crossings[i]
 
-                                # now check what arc it is for the j-th crossing
+                                # now check which arc it is for the j-th crossing
                                 if j_n % 2 == 0:  # the arc belongs to lower stride of the j-th crossing
-                                    if number1 == min(self.__pd_notation[j][0], self.__pd_notation[j][2]):
+                                    if number1 == min(self.pd_notation[j][0], self.pd_notation[j][2]):
                                         # the arc is the back arc of the stride
-                                        self.__crossings[j].lower_stride.back_arc = arc
+                                        self.crossings[j].lower_stride.back_arc = arc
+                                        self.crossings[j].lower_stride.back_arc.front_crossing = self.crossings[j]
                                     else:  # the arc is the front arc of the stride
-                                        self.__crossings[j].lower_stride.front_arc = arc
+                                        self.crossings[j].lower_stride.front_arc = arc
+                                        self.crossings[j].lower_stride.front_arc.back_crossing = self.crossings[j]
                                 else: # the arc belongs to the upper stride of the j-th crossing
-                                    if number1 == min(self.__pd_notation[j][1], self.__pd_notation[j][3]):
+                                    if number1 == min(self.pd_notation[j][1], self.pd_notation[j][3]):
                                         # the arc is the back arc of the stride
-                                        self.__crossings[j].upper_stride.back_arc = arc
+                                        self.crossings[j].upper_stride.back_arc = arc
+                                        self.crossings[j].upper_stride.back_arc.front_crossing = self.crossings[i]
                                     else: # the arc is the front arc of the stride
-                                        self.__crossings[j].upper_stride.front_arc = arc
+                                        self.crossings[j].upper_stride.front_arc = arc
+                                        self.crossings[j].upper_stride.front_arc.back_crossing = self.crossings[i]
+
                     assigned.add(number1) # adds the crossing to assigned
                 else: #move on if the arc is already assigned
                     continue
 
+    def __str__(self):
+        string_repr = ""
+        for crossing in self.crossings:
+            string_repr += crossing.__str__() + "\n"
+        return string_repr
+
 
 class Crossing:
     def __init__(self):
+        self.index = None
         self.lower_stride = Stride()
         self.upper_stride = Stride()
-        self.crossing = None
+
+    def __str__(self):
+        return (f"(Crossing {self.index}) "
+                f"Lower stride {self.lower_stride.index}: {self.lower_stride.back_arc.number}---|--->{self.lower_stride.front_arc.number}, "
+                f"Upper stride {self.upper_stride.index}: {self.upper_stride.back_arc.number}---:--->{self.upper_stride.front_arc.number} ")
 
 class Stride:
     def __init__(self):
+        self.index = None
         self.front_arc = None
         self.back_arc = None
-        self.crossing = None
+
+    def __str__(self):
+        return f"(Stride {self.index}) Front arc: {self.front_arc.number}, Back arc: {self.back_arc.number}"
+
 
 class Arc:
     def __init__(self, number):
         self.number =  number
+        self.back_crossing = None
+        self.front_crossing = None
 
+    def __str__(self):
+        return f"Arc {self.number}: start crossing - {self.back_crossing.index}, end crossing - {self.front_crossing.index}"
 
 knot = Knot([[1,5,2,4],[3,1,4,6],[5,3,6,2]])
-print(knot.crossings[0].lower_stride.front_arc.number)
+print(knot)
 
