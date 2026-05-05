@@ -1,4 +1,8 @@
-def string_to_vector_parser(str_digit : str, sep ="; "):
+import regina
+import snappy
+# polynomial functions
+
+def string_to_vector_parser(str_digit : str, sep ="; "): #do dopracowania, nie uwzględnia niektórych edge caseów
     def parse(i):
         number = ""
         result = []
@@ -57,3 +61,55 @@ def is_symmetrical(knot_vector : list, vector_type : str = "jones"):
     :return: Boolean value
     """
     return reverse_vector(knot_vector, vector_type) == knot_vector
+
+#loading knots with regina or snappy, pd notation, counting bigons
+
+def load_knot_from_regina(sig) -> regina.Link:
+    """
+    Laads knot using native Regina knot signature.
+    :param sig: a string which is a native Regina knot signature
+    :return: regina.Link
+    """
+    L = regina.Link.fromKnotSig(sig)
+
+    return L
+
+def load_knot_from_dt_code(dt_code) -> snappy.Link:
+    letters = "abcdefghijklmnopqrs"
+    n_cross = len(dt_code)
+    snappy_code = "DT:" + letters[n_cross - 1] + "a" + letters[n_cross - 1] + dt_code
+    L = snappy.Link(snappy_code)
+    return L
+
+def pd_not_from_dt_code(dt_code):
+    L = load_knot_from_dt_code(dt_code)
+    pd_not = L.PD_code()
+    return pd_not
+
+def count_bigons_from_pd(pd_not : list[tuple[int]]) -> int:
+    pd_sets = []
+    for crossing in pd_not:
+        pd_sets.append(set(crossing))
+
+    num_bigon = 0
+
+    for i in range(len(pd_sets)):
+        for j in range(i + 1, len(pd_sets)):
+            inters = pd_sets[i].intersection(pd_sets[j])
+            if len(inters) == 2:
+                num_bigon += 1
+
+    return num_bigon
+
+def check_if_bigons(pd_not : list[tuple[int]]) -> int:
+    pd_sets = []
+    for crossing in pd_not:
+        pd_sets.append(set(crossing))
+
+    for i in range(len(pd_sets)):
+        for j in range(i + 1, len(pd_sets)):
+            inters = pd_sets[i].intersection(pd_sets[j])
+            if len(inters) == 2:
+                return True
+
+    return False
