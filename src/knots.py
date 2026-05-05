@@ -214,7 +214,3 @@ class Arc:
 
     def __str__(self):
         return f"Arc {self.number}: start crossing - {self.back_crossing.index}, end crossing - {self.front_crossing.index}"
-
-knot = Knot([[1,5,2,4],[3,1,4,6],[5,3,6,2]])
-print(knot)
-
